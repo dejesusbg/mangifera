@@ -1,27 +1,27 @@
 import os
-from PIL import Image
 import kagglehub
 
 
 class MangoDataset:
+    DATASET_NAME = "adrinbd/unripe-ripe-rotten-mango"
+    TAGS = ["Ripe", "Rotten"]
+
     def __init__(self):
-        self.dataset_name = "adrinbd/unripe-ripe-rotten-mango"
         self.path = self.download()
+        self.train = self.get_data("train")
+        self.validation = self.get_data("validation")
 
     def download(self):
-        path = kagglehub.dataset_download(self.dataset_name)
-        print("Path to dataset files:", path)
-        return path
+        return kagglehub.dataset_download(self.DATASET_NAME)
 
-    def load(self, use, classification):
+    def get_data(self, use):
+        data = []
 
-        folder = os.path.join(self.path, "Dataset", use, classification)
+        for tag in self.TAGS:
+            folder = os.path.join(self.path, "Dataset", use, tag)
+            filenames = os.listdir(folder)
 
-        images = []
-        for filename in os.listdir(folder):
-            img_path = os.path.join(folder, filename)
-            if os.path.isfile(img_path):
-                img = Image.open(img_path)
-                images.append(img)
+            for filename in filenames:
+                data.append({"tag": tag, "filename": filename})
 
-        return images
+        return data
