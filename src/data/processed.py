@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from PIL import Image
+import matplotlib.pyplot as plt
 from src.data.csv import CSVData
 from src.data.image import MangoImage as Mango
 
@@ -30,3 +30,24 @@ class MangoProcessor:
         img_values = list(image.values())[1:4097]
         img_array = np.array(img_values).reshape(size)
         return img_array
+
+    def load_histogram(self, image):
+        hist = list(image.values())[4097:]
+        bins = np.arange(256)
+
+        b_hist = hist[0:256]
+        g_hist = hist[256:512]
+        r_hist = hist[512:768]
+
+        plt.figure(figsize=(10, 5))
+
+        plt.plot(bins, b_hist, color="blue", label="Blue Channel")
+        plt.plot(bins, g_hist, color="green", label="Green Channel")
+        plt.plot(bins, r_hist, color="red", label="Red Channel")
+
+        plt.title("Color Histogram")
+        plt.xlabel("Pixel Intensity")
+        plt.ylabel("Frequency")
+        plt.legend()
+
+        plt.show()
