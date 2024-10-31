@@ -2,11 +2,11 @@ import os
 import cv2
 import numpy as np
 from PIL import Image
+from src.data.csv import CSVData
 
 
 class MangoImage:
     SIZE = (64, 64)
-    PATH = ""
 
     def __init__(self, image):
         self.image = image
@@ -52,7 +52,7 @@ class MangoImage:
 
     @staticmethod
     def load_original(use, image):
-        path = MangoImage.PATH
+        path = CSVData.get_saved_dataset_path()
         label = image["label"]
         filename = image["filename"]
         image_path = os.path.join(path, "Dataset", use, label, filename)
