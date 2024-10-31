@@ -4,22 +4,13 @@ import numpy as np
 from PIL import Image
 
 
-class MangoManager:
-    path = ""
-
-    def __init__(self, path):
-        MangoManager.path = path
-
-    def create_image(self, image_data):
-        return MangoImage(image_data)
-
-
 class MangoImage:
     SIZE = (64, 64)
+    PATH = ""
 
     def __init__(self, image):
         self.image = image
-        self.label = image["label"]
+        self.label = int(image["label"] == "Ripe")
         self.preprocess()
 
     def detect_edges(self, img):
@@ -34,36 +25,36 @@ class MangoImage:
     def calculate_histogram(self, img):
         hist = []
         for i in range(3):
-            hist.append(cv2.calcHist([img], [i], None, [256], [0, 256]))
+            channel_hist = cv2.calcHist([img], [i], None, [256], [0, 256])
+            hist.append(channel_hist)
 
         return np.concatenate(hist)
 
     def preprocess(self):
-        img = self.load("train", self.image)
+        img = self.load_original("train", self.image)
         img = np.array(img)
         img = cv2.resize(img, self.SIZE)
 
         self.edges = self.detect_edges(img)
-        edges = self.edges.flatten()
-
+        edges_flat = self.edges.flatten()
         self.histogram = self.calculate_histogram(img)
-        histogram = self.histogram.flatten()
+        histogram_flat = self.histogram.flatten()
 
-        self.features = np.concatenate((edges, histogram))
+        self.features = np.concatenate((edges_flat, histogram_flat))
 
     def __iter__(self):
-        yield ("label", self.image["label"])
-        yield ("filename", self.image["filename"])
+        yield ("label", self.label)
         for index, feature in enumerate(self.features):
-            yield (f"{index}", feature)
+            yield (f"{index}", int(feature))
 
     def __str__(self):
         return str(self.image)
 
     @staticmethod
-    def load(use, image):
-        image_path = os.path.join(
-            MangoManager.path, "Dataset", use, image["label"], image["filename"]
-        )
-        img = Image.open(image_path)
-        return img
+    def load_original(use, image):
+        path = MangoImage.PATH
+        label = image["label"]
+        filename = image["filename"]
+        image_path = os.path.join(path, "Dataset", use, label, filename)
+
+        return Image.open(image_path)
