@@ -39,6 +39,7 @@ pytz==2024.2
 pywin32==308
 pyzmq==26.2.0
 requests==2.32.3
+seaborn==0.13.2
 six==1.16.0
 stack-data==0.6.3
 tornado==6.4.1
