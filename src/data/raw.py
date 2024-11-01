@@ -8,7 +8,6 @@ class MangoDataset:
     DATASET_NAME = "adrinbd/unripe-ripe-rotten-mango"
     LABELS = ["Ripe", "Rotten"]
     CSV_DIR = "../data/raw"
-    PATH_FILE = "../data/path.txt"
 
     def __init__(self):
         self.path = self._check_and_download_dataset()
@@ -19,26 +18,14 @@ class MangoDataset:
         if not os.path.exists(self.CSV_DIR):
             os.makedirs(self.CSV_DIR)
             dataset_path = self._download_dataset()
-            self._save_dataset_path(dataset_path)
+            CSVData.save_dataset_path(dataset_path)
             return dataset_path
 
-        return self._get_saved_dataset_path()
+        return CSVData.get_saved_dataset_path()
 
     @classmethod
     def _download_dataset(cls):
         return kagglehub.dataset_download(cls.DATASET_NAME)
-
-    @classmethod
-    def _save_dataset_path(cls, path):
-        with open(cls.PATH_FILE, "w") as f:
-            f.write(path)
-
-    @classmethod
-    def _get_saved_dataset_path(cls):
-        if os.path.exists(cls.PATH_FILE):
-            with open(cls.PATH_FILE, "r") as f:
-                return f.read().strip()
-        return None
 
     def _create_csv_dataset(self, split):
         return CSVData(

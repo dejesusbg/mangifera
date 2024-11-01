@@ -3,6 +3,8 @@ import pandas as pd
 
 
 class CSVData(list):
+    PATH_FILE = "../data/path.txt"
+
     def __init__(self, csv_path, data_generator=lambda: []):
         self.csv_path = csv_path
         self.data_generator = data_generator
@@ -24,3 +26,15 @@ class CSVData(list):
         path = os.path.join(os.getcwd(), self.csv_path)
         df = pd.DataFrame(self.data)
         df.to_csv(path, index=False)
+
+    @classmethod
+    def get_saved_dataset_path(cls):
+        if os.path.exists(cls.PATH_FILE):
+            with open(cls.PATH_FILE, "r") as f:
+                return f.read().strip()
+        return None
+
+    @classmethod
+    def save_dataset_path(cls, path):
+        with open(cls.PATH_FILE, "w") as f:
+            f.write(path)
