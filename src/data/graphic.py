@@ -1,106 +1,66 @@
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-from random import sample
 from PIL import Image
-from src import CSVData
+from src import csv_data
 
 
-class MangoPlot:
+class MangoPlotter:
     @staticmethod
-    def load_original(split, image):
-        """Load the original image from the dataset based on its path."""
-        path = CSVData.get_saved_dataset_path()
-        label = image["label"]
-        filename = image["filename"]
-        image_path = os.path.join(path, "Dataset", split, label, filename)
-        return Image.open(image_path)
+    def _get_img_size():
+        """Retrieve the size of the mango images."""
+        from src import mango
 
-    @staticmethod
-    def _get_size():
-        """Get the size of the image."""
-        from src import Mango
-
-        return Mango.SIZE
+        return mango.SIZE
 
     @classmethod
-    def _extract_values(cls, image, is_compressed=False):
-        """Extract edges and histogram values from the image."""
-        size = cls._get_size()
-        edges = []
-        histogram = []
-
-        if is_compressed:
-            histogram = [image[f"hist_{i}"] for i in range(256)]
+    def _extract_data(cls, img, compressed=False):
+        """Extract edges and histogram data from the image."""
+        edges, histogram = [], []
+        if compressed:
+            histogram = [img[f"hist_{i}"] for i in range(256)]
         else:
-            edges = [image[f"edge_{i}"] for i in range(size[0] * size[1])]
-            histogram = [image[f"hist_{i}"] for i in range(256 * 3)]
-
+            size = cls._get_img_size()
+            edges = [img[f"edge_{i}"] for i in range(size[0] * size[1])]
+            histogram = [img[f"hist_{i}"] for i in range(256 * 3)]
         return edges, histogram
 
     @classmethod
-    def load_processed(cls, image):
-        """Load and reshape the processed image into a 2D array."""
-        edges, _ = cls._extract_values(image)
-        return np.array(edges).reshape(cls._get_size())
+    def load_orig_img(cls, split, img):
+        """Load and resize the original image from the the specified split."""
+        path = csv_data.get_dataset_path()
+        path = os.path.join(path, "Dataset", split, img["label"], img["filename"])
+        img_resized = Image.open(path).resize(cls._get_img_size())
+        return img_resized
 
     @classmethod
-    def load_histogram(cls, image, is_compressed=False):
-        """Load the color histogram of the image."""
-        _, histograms = cls._extract_values(image, is_compressed)
+    def load_proc_img(cls, img):
+        """Load processed image data and reshape it."""
+        edges, _ = cls._extract_data(img)
+        return np.array(edges).reshape(cls._get_img_size())
+
+    @classmethod
+    def load_hist(cls, img, compressed=False):
+        """Load histogram data from rgb or grayscale data."""
+        _, histogram = cls._extract_data(img, compressed)
+        if not compressed:
+            histogram = [histogram[i : i + 256] for i in range(0, 768, 256)]
+        return histogram
+
+    @classmethod
+    def load_all_hists(cls, edges_img, stats_img):
+        """Load histograms from both rgb and grayscale data, and prepare for plotting."""
+        edges_hist = cls.load_hist(edges_img)
+        stats_hist = cls.load_hist(stats_img, True)
+
         bins = np.arange(256)
+        histograms = edges_hist + [stats_hist]
+        colors = ["blue", "green", "red", "orange"]
+        return bins, colors, histograms
 
-        if is_compressed:
-            plt.plot(bins, histograms, color="orange", label="Gray Channel")
-        else:
-            # Create sublists for each color channel
-            colors = ["blue", "green", "red"]
-            histograms = [histograms[i : i + 256] for i in range(0, 768, 256)]
+    @staticmethod
+    def combine_images(orig_img, proc_img):
+        """Combine the original and processed images side by side for comparison."""
+        if proc_img.ndim == 2:
+            proc_img = np.stack([proc_img] * 3, axis=-1)
 
-            # Plot histograms
-            plt.figure(figsize=(10, 5))
-            for color, hist in zip(colors, histograms):
-                label = f"{color.capitalize()} Channel"
-                plt.plot(bins, hist, color=color, label=label, alpha=0.7)
-
-        plt.title(f"Color Histogram of {image['filename']}")
-        plt.xlabel("Pixel Intensity")
-        plt.ylabel("Frequency")
-        plt.legend()
-        plt.grid()
-
-        return plt
-
-    @classmethod
-    def show_samples(cls, proc_set, orig_set, num_samples=5):
-        num_samples = min(num_samples, len(proc_set))
-
-        indices = sample(range(len(proc_set)), num_samples)
-        selected_images = [(orig_set[i], proc_set[i]) for i in indices]
-
-        _, axes = plt.subplots(2, num_samples, figsize=(15, 6))
-
-        for ax, (orig_img, proc_img) in zip(axes[0], selected_images):
-            ax.imshow(cls.load_original("train", orig_img))
-            ax.axis("off")
-
-        for ax, (orig_img, proc_img) in zip(axes[1], selected_images):
-            ax.set_title(proc_img["label"])
-            ax.imshow(cls.load_processed(proc_img))
-            ax.axis("off")
-
-        plt.tight_layout()
-        plt.show()
-
-    @classmethod
-    def show_histogram_samples(cls, edges_set, stats_set, num_samples=1):
-        num_samples = min(num_samples, len(edges_set))
-
-        indices = sample(range(len(edges_set)), num_samples)
-
-        for i in indices:
-            edges = cls.load_histogram(edges_set[i])
-            stats = cls.load_histogram(stats_set[i], True)
-
-            edges.show()
-            stats.show()
+        return np.hstack((orig_img, proc_img))

@@ -4,80 +4,60 @@ import skimage as ski
 from skimage.filters import threshold_otsu
 from skimage.morphology import remove_small_objects
 from scipy.ndimage import binary_fill_holes
-from src import Mango
+from src import mango
 
 
-class StatsMango(Mango):
+class MangoStatistics(mango):
     def _extract_features(self):
-        """Extract various features from the mango image."""
-        img = self._load_original("train", self.image)
-        img_resized = cv2.resize(np.array(img), self.SIZE)
-        gray_img = cv2.cvtColor(img_resized, cv2.COLOR_BGR2GRAY)
+        """Extract statistical features from the mango image."""
+        img = self._load_image("train", self.image)
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        # Create a binary mask for the mango
-        mango_mask = self._get_binary_mango(gray_img)
+        mask = self._get_binary_mask(gray_img)
+        self.area = np.sum(mask)
 
-        # Calculate properties with checks for valid mask
-        area = np.sum(mango_mask)
+        if self.area > 0:
+            pixel_values = gray_img[mask > 0]
 
-        if area > 0:
-            mean_gray = np.mean(gray_img[mango_mask > 0])
-            max_gray = np.max(gray_img[mango_mask > 0])
-            min_gray = np.min(gray_img[mango_mask > 0])
-            std_dev_gray = np.std(gray_img[mango_mask > 0])
+            self.mean_gray = np.mean(pixel_values)
+            self.max_gray = np.max(pixel_values)
+            self.min_gray = np.min(pixel_values)
+            self.std_dev_gray = np.std(pixel_values)
+
+            mean_intensity = lambda channel: np.mean(img[:, :, channel][mask > 0])
+            self.mean_intensity_R = mean_intensity(0)
+            self.mean_intensity_G = mean_intensity(1)
+            self.mean_intensity_B = mean_intensity(2)
+
+            self.histogram = self._get_histogram(pixel_values)
         else:
-            mean_gray = max_gray = min_gray = std_dev_gray = 0.0
+            self.mean_gray = self.max_gray = self.min_gray = self.std_dev_gray = 0.0
+            self.mean_intensity_R = self.mean_intensity_G = self.mean_intensity_B = 0.0
+            self.histogram = np.zeros(256, dtype=int)
 
-        # Mean intensities for each color channel
-        mean_intensity_R = (
-            np.mean(img_resized[:, :, 0][mango_mask > 0]) if area > 0 else 0.0
-        )
-        mean_intensity_G = (
-            np.mean(img_resized[:, :, 1][mango_mask > 0]) if area > 0 else 0.0
-        )
-        mean_intensity_B = (
-            np.mean(img_resized[:, :, 2][mango_mask > 0]) if area > 0 else 0.0
-        )
+    @staticmethod
+    def _get_histogram(pixel_values):
+        """Calculate the histogram of pixel values."""
+        return np.histogram(pixel_values, bins=256, range=(0, 255))[0]
 
-        # Histogram
-        histogram = self._calculate_histogram(area, gray_img[mango_mask > 0])
-
-        # Combine all features into a single dictionary
-        return {
-            "area": area,
-            "mean_gray": mean_gray,
-            "max_gray": max_gray,
-            "min_gray": min_gray,
-            "std_dev_gray": std_dev_gray,
-            "mean_intensity_R": mean_intensity_R,
-            "mean_intensity_G": mean_intensity_G,
-            "mean_intensity_B": mean_intensity_B,
-            **histogram,
-        }
-
-    def _get_binary_mango(self, gray_image):
-        """Get a binary mask of the mango using Otsu's thresholding."""
-        blurred_image = ski.filters.gaussian(gray_image, sigma=1.0)
-        binary_image = blurred_image > threshold_otsu(blurred_image)
-        filled_img = binary_fill_holes(binary_image)
-        labeled_image, _ = ski.measure.label(
-            filled_img, connectivity=2, return_num=True
-        )
-        mango_mask = remove_small_objects(labeled_image, min_size=100)
-        return mango_mask
-
-    def _calculate_histogram(self, area, pixel_values):
-        """Calculate histogram counts for pixel values from 0 to 255."""
-        if area <= 0:
-            return {f"hist_{i}": 0 for i in range(256)}
-        return {f"hist_{i}": np.count_nonzero(pixel_values == i) for i in range(256)}
+    @staticmethod
+    def _get_binary_mask(gray_img):
+        """Generate a binary mask from the grayscale image using Otsu's thresholding."""
+        blurred_img = ski.filters.gaussian(gray_img, sigma=1.0)
+        binary_img = blurred_img > threshold_otsu(blurred_img)
+        filled_img = binary_fill_holes(binary_img)
+        labeled_img, _ = ski.measure.label(filled_img, connectivity=2, return_num=True)
+        return remove_small_objects(labeled_img, min_size=100)
 
     def __iter__(self):
-        """Yield label and features for iteration."""
+        """Yield statistical features for iteration over the detector's results."""
         yield from super().__iter__()
-        for key, value in self.features.items():
-            yield (key, value)
-
-    def __str__(self):
-        """Return a string representation of the image."""
-        return str(self.image)
+        yield ("area", self.area)
+        yield ("mean_gray", self.mean_gray)
+        yield ("max_gray", self.max_gray)
+        yield ("min_gray", self.min_gray)
+        yield ("std_dev_gray", self.std_dev_gray)
+        yield ("mean_intensity_R", self.mean_intensity_R)
+        yield ("mean_intensity_G", self.mean_intensity_G)
+        yield ("mean_intensity_B", self.mean_intensity_B)
+        yield from self._map_features("hist", self.histogram)

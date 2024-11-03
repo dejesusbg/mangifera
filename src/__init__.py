@@ -3,21 +3,20 @@ import sys
 sys.path.append("../src/data")
 sys.path.append("../src/features")
 
-from src.data.csv import CSVData
-from src.data.raw import MangoDataset
-from src.data.processed import MangoProcessor as ImageProcessor
-from src.data.graphic import MangoPlot as Graphic
-
-from src.features.image import MangoFeatures as Mango
-from src.features.edges import EdgesMango
-from src.features.stats import StatsMango
+from src.data.csv import CSVData as csv_data
+from src.data.graphic import MangoPlotter as graphic
+from src.data.raw import MangoDataset as get_dataset
+from src.data.processed import MangoProcessor as preprocess
+from src.features.image import MangoFeatureExtractor as mango
+from src.features.edges import MangoEdgeDetector as get_edges
+from src.features.stats import MangoStatistics as get_stats
 
 __all__ = [
-    "CSVData",
-    "MangoDataset",
-    "ImageProcessor",
-    "Graphic",
-    "Mango",
-    "EdgesMango",
-    "StatsMango",
+    "csv_data",
+    "graphic",
+    "get_dataset",
+    "preprocess",
+    "mango",
+    "get_edges",
+    "get_stats",
 ]

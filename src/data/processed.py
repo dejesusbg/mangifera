@@ -1,5 +1,5 @@
 import os
-from src import CSVData
+from src import csv_data
 
 
 class MangoProcessor:
@@ -7,25 +7,20 @@ class MangoProcessor:
 
     def __init__(self, image_set=[]):
         os.makedirs(self.CSV_DIR, exist_ok=True)
-
         self.image_set = image_set
-        self.edges_data = self._create_csv_dataset("edges", False)
-        self.stats_data = self._create_csv_dataset("stats", True)
+        self.edges_data = self._create_csv("edges", False)
+        self.stats_data = self._create_csv("stats", True)
 
-    def _create_csv_dataset(self, split, is_compressed):
-        """Create a CSV dataset for the specified type (edges/stats)."""
-        return CSVData(
+    def _process(self, compressed):
+        """Process images to extract features."""
+        from src import get_edges, get_stats
+
+        features = get_stats if compressed else get_edges
+        return [dict(features(image)) for image in self.image_set]
+
+    def _create_csv(self, split, compressed):
+        """Create a CSV file for the specified split using the processing method."""
+        return csv_data(
             os.path.join(self.CSV_DIR, f"{split}.csv"),
-            data_generator=lambda: self._process(is_compressed),
+            data_generator=lambda: self._process(compressed),
         )
-
-    def _process(self, is_compressed):
-        """Process and return a list of images as dictionaries."""
-        from src import EdgesMango, StatsMango
-
-        extract_features = StatsMango if is_compressed else EdgesMango
-        return [dict(extract_features(image)) for image in self.image_set]
-
-    def get_processed_data(self):
-        """Return processed data."""
-        return [self.edges_data, self.stats_data]
