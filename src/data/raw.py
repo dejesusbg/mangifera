@@ -1,7 +1,6 @@
 import os
-import pandas as pd
 import kagglehub
-from src.data.csv import CSVData
+from src import CSVData
 
 
 class MangoDataset:
@@ -46,7 +45,7 @@ class MangoDataset:
             if os.path.exists(label_folder):
                 # Extend the data list with filenames and their labels
                 data.extend(
-                    {"label": label, "filename": filename}
+                    {"filename": filename, "label": label}
                     for filename in os.listdir(label_folder)
                 )
         return data
