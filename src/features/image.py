@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from src import graphic
+from .. import graphic
 
 
 class MangoFeatureExtractor:

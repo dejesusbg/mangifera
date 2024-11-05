@@ -1,6 +1,6 @@
 import os
 import kagglehub
-from src import csv_data
+from .. import csv_data
 
 
 class MangoDataset:

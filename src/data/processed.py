@@ -1,5 +1,5 @@
 import os
-from src import csv_data
+from .. import csv_data
 
 
 class MangoProcessor:
@@ -13,7 +13,7 @@ class MangoProcessor:
 
     def _process(self, compressed):
         """Process images to extract features."""
-        from src import get_edges, get_stats
+        from .. import get_edges, get_stats
 
         features = get_stats if compressed else get_edges
         return [dict(features(image)) for image in self.image_set]

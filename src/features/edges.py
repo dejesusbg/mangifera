@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from src import mango
+from .. import mango
 
 
 class MangoEdgeDetector(mango):
