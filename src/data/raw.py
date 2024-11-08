@@ -5,7 +5,7 @@ from .. import csv_data
 
 class MangoDataset:
     DATASET_NAME = "adrinbd/unripe-ripe-rotten-mango"
-    LABELS = ["Ripe", "Rotten"]
+    LABELS = ("Ripe", "Rotten")
     CSV_DIR = "../data/raw"
 
     def __init__(self):
