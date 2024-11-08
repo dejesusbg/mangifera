@@ -15,6 +15,7 @@ ipykernel==6.29.5
 ipython==8.29.0
 ipywidgets==8.1.5
 jedi==0.19.1
+joblib==1.4.2
 jupyter_client==8.6.3
 jupyter_core==5.7.2
 jupyterlab_widgets==3.0.13
@@ -43,10 +44,12 @@ pywin32==308; platform_system=="Windows"
 pyzmq==26.2.0
 requests==2.32.3
 scikit-image==0.24.0
+scikit-learn==1.5.2
 scipy==1.14.1
 seaborn==0.13.2
 six==1.16.0
 stack-data==0.6.3
+threadpoolctl==3.5.0
 tifffile==2024.9.20
 tornado==6.4.1
 tqdm==4.66.5
