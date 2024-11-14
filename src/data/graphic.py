@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PIL import Image
-from sklearn.decomposition import PCA
 from random import sample
 from .. import csv_data
 
@@ -12,22 +11,18 @@ class MangoPlotter:
     SIZE = (224, 224)
 
     @staticmethod
-    def load_image(split, img, grayscale=False):
+    def load_image(split, img):
         """Load and resize the original image from the the specified split."""
         path = csv_data.get_dataset_path()
         path = os.path.join(path, "Dataset", split, img["label"], img["filename"])
         img_resized = Image.open(path).resize(MangoPlotter.SIZE)
-
-        if grayscale:
-            img_resized = img_resized.convert("L")
-
-        return img_resized
+        return np.array(img_resized)
 
     @staticmethod
     def load_histogram(img):
         """Load histogram data from the image."""
         bins = np.arange(256)
-        histogram = [img[f"hist_{i}"] for i in range(256)]
+        histogram = [[img[f"hist_{i + j*256}"] for i in range(256)] for j in range(3)]
         return bins, histogram
 
     @staticmethod
@@ -47,8 +42,9 @@ class MangoPlotter:
 
         for ax, (train_img, features_img) in zip(axes[:, 1], selected_images):
             ax.set_title("Histogram")
-            bins, histogram = MangoPlotter.load_histogram(features_img)
-            ax.plot(bins, histogram)
+            bins, histograms = MangoPlotter.load_histogram(features_img)
+            for hist, color in zip(histograms, ["r", "g", "b"]):
+                ax.plot(bins, hist, color=color, alpha=0.7)
             ax.axis("tight")
 
         plt.tight_layout()
@@ -82,13 +78,15 @@ class MangoPlotter:
         plt.show()
 
     @staticmethod
-    def show_pca(stats_df):
+    def show_pca(pca_components, name):
         """Display the PCA of the RGB mean and standard deviation."""
-        pca = PCA(n_components=2)
-        pca_components = pca.fit_transform(stats_df)
-
         plt.figure(figsize=(10, 6))
-        plt.scatter(pca_components[:, 0], pca_components[:, 1], alpha=0.5, color="blue")
+        plt.scatter(
+            pca_components[f"{name}_0"],
+            pca_components[f"{name}_1"],
+            alpha=0.5,
+            color="blue",
+        )
         plt.title("PCA of Image Features")
         plt.xlabel("Principal Component 1")
         plt.ylabel("Principal Component 2")
