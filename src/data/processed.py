@@ -8,8 +8,8 @@ class MangoProcessor:
     def __init__(self, image_set=[]):
         os.makedirs(self.CSV_DIR, exist_ok=True)
         self.image_set = image_set
-        self.features = self._create_csv("features", self._process)
-        self.pca = self._create_csv("pca", self._get_pca)
+        self.features_data = self._create_csv("features", self._process)
+        self.pca_data = self._create_csv("pca", self._get_pca)
 
     def _process(self):
         """Process images to extract features."""
@@ -17,7 +17,7 @@ class MangoProcessor:
 
     def _get_pca(self):
         """Get the principal components of the image features."""
-        return features.get_pca_features(self.features)
+        return features.get_pca_features(self.features_data)
 
     def _create_csv(self, split, data_generator):
         """Create a CSV file using the processed data."""

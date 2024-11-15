@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PIL import Image
@@ -26,12 +27,12 @@ class MangoPlotter:
         return bins, histogram
 
     @staticmethod
-    def show_samples(train_set, features_set, num_samples=5):
+    def show_samples(train_df, features_df, num_samples=5):
         """Display a set of sample images and their corresponding histograms."""
-        num_samples = min(num_samples, len(train_set))
+        num_samples = min(num_samples, len(train_df))
 
-        indices = sample(range(len(train_set)), num_samples)
-        selected_images = [(train_set[i], features_set[i]) for i in indices]
+        indices = sample(range(len(train_df)), num_samples)
+        selected_images = [(train_df.iloc[i], features_df.iloc[i]) for i in indices]
 
         _, axes = plt.subplots(num_samples, 2, figsize=(12, 3 * num_samples))
 
@@ -78,15 +79,10 @@ class MangoPlotter:
         plt.show()
 
     @staticmethod
-    def show_pca(pca_components, name):
+    def show_pca(x, y):
         """Display the PCA of the RGB mean and standard deviation."""
         plt.figure(figsize=(10, 6))
-        plt.scatter(
-            pca_components[f"{name}_0"],
-            pca_components[f"{name}_1"],
-            alpha=0.5,
-            color="blue",
-        )
+        plt.scatter(x, y, alpha=0.5, color="blue")
         plt.title("PCA of Image Features")
         plt.xlabel("Principal Component 1")
         plt.ylabel("Principal Component 2")

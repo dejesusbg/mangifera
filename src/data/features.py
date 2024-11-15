@@ -13,11 +13,9 @@ from .. import graphic
 class MangoFeatureExtractor:
     CHANNELS = ("r", "g", "b")
     STATS = ("mean", "std_dev")
-    PCA_COMPONENTS = {"area": 1, "stat": 2, "hist": 32}
 
     def __init__(self, img):
         self.image = img
-        self.label = int(img["label"] == "Ripe")
         self._extract_features()
 
     def __repr__(self):
@@ -27,7 +25,6 @@ class MangoFeatureExtractor:
     def __iter__(self):
         """Yield label and features over the detector's results."""
         yield ("area", self.area)
-        yield ("label", self.label)
         yield from self._get_features()
 
     def _extract_features(self):
@@ -77,17 +74,13 @@ class MangoFeatureExtractor:
         labeled_img, _ = ski.measure.label(filled_img, connectivity=2, return_num=True)
         return remove_small_objects(labeled_img, min_size=100)
 
-    @classmethod
-    def get_pca(cls, name, features):
+    @staticmethod
+    def get_pca(features, n_components=2):
         """Get the principal components of the image features."""
         scaler = StandardScaler()
         scaled_features = scaler.fit_transform(features)
-
-        pca = PCA(n_components=cls.PCA_COMPONENTS[name])
-        pca_features = pca.fit_transform(scaled_features)
-        pca_features = pd.DataFrame(pca_features)
-        pca_features.columns = [f"{name}_{i}" for i in range(pca_features.shape[1])]
-        return pca_features
+        pca = PCA(n_components=n_components)
+        return pca.fit_transform(scaled_features)
 
     @classmethod
     def get_pca_features(cls, features):
@@ -95,13 +88,13 @@ class MangoFeatureExtractor:
         features = pd.DataFrame(features)
 
         area = features[["area"]]
-        X_area = cls.get_pca("area", area)
+        X_area = cls.get_pca(area, 1)
 
         stats_id = ["mean_r", "mean_g", "mean_b", "std_dev_r", "std_dev_g", "std_dev_b"]
         stats = features[stats_id]
-        X_stats = cls.get_pca("stat", stats)
+        X_stats = cls.get_pca(stats, 2)
 
         histograms = features[[f"hist_{i}" for i in range(768)]]
-        X_histogram = cls.get_pca("hist", histograms)
+        X_histogram = cls.get_pca(histograms, 16)
 
-        return pd.concat([X_area, X_stats, X_histogram], axis=1)
+        return np.concatenate([X_area, X_stats, X_histogram], axis=1)
