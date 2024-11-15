@@ -9,19 +9,24 @@ class MangoProcessor:
         os.makedirs(self.CSV_DIR, exist_ok=True)
         self.image_set = image_set
         self.features_data = self._create_csv("features", self._process)
-        self.pca_data = self._create_csv("pca", self._get_pca)
+
+    def get_pca(self, split="default", hist_components=50):
+        """Get the principal components of the image features."""
+        filename = f"pca_{split}"
+        return self._create_csv(filename, lambda: self._process_pca(hist_components))
 
     def _process(self):
         """Process images to extract features."""
         return [dict(features(image)) for image in self.image_set]
 
-    def _get_pca(self):
+    def _process_pca(self, hist_components):
         """Get the principal components of the image features."""
-        return features.get_pca_features(self.features_data)
+        return features.get_pca_features(self.features_data, hist_components)
 
-    def _create_csv(self, split, data_generator):
+    @classmethod
+    def _create_csv(cls, split, data_generator):
         """Create a CSV file using the processed data."""
         return csv_data(
-            os.path.join(self.CSV_DIR, f"{split}.csv"),
+            os.path.join(cls.CSV_DIR, f"{split}.csv"),
             data_generator=data_generator,
         )
