@@ -1,5 +1,5 @@
 import os
-from .. import csv_data, features
+from . import csv_data, features
 
 
 class MangoProcessor:

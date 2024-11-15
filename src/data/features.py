@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from skimage.filters import threshold_otsu
 from skimage.morphology import remove_small_objects
 from scipy.ndimage import binary_fill_holes
-from .. import graphic
+from . import graphic
 
 
 class MangoFeatureExtractor:

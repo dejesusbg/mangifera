@@ -1,6 +1,6 @@
 import os
 import kagglehub
-from .. import csv_data
+from . import csv_data
 
 
 class MangoDataset:
@@ -29,7 +29,7 @@ class MangoDataset:
             label_folder = os.path.join(self.path, "Dataset", split, label)
             if os.path.exists(label_folder):
                 for filename in os.listdir(label_folder):
-                    data.append({"filename": filename, "label": label})
+                    data.append({"label": label, "filename": filename})
         return data
 
     def _create_csv(self, split):
