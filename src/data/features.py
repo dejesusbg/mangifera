@@ -3,7 +3,7 @@ import numpy as np
 import skimage as ski
 import pandas as pd
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from skimage.filters import threshold_otsu
 from skimage.morphology import remove_small_objects
 from scipy.ndimage import binary_fill_holes
@@ -14,7 +14,8 @@ class MangoFeatureExtractor:
     CHANNELS = ("r", "g", "b")
     STATS = ("mean", "std_dev")
 
-    def __init__(self, image):
+    def __init__(self, split, image):
+        self.split = split
         self.image = image
         self.mean = {}
         self.std_dev = {}
@@ -28,7 +29,7 @@ class MangoFeatureExtractor:
 
     def _extract_features(self):
         """Extract relevant features from the mango image."""
-        img = graphic.load_image("train", self.image)
+        img = graphic.load_image(self.split, self.image)
         gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mask = self._get_binary_mask(gray_img)
         self.area = np.sum(mask)
@@ -69,26 +70,24 @@ class MangoFeatureExtractor:
         return remove_small_objects(labeled_img, min_size=100)
 
     @staticmethod
-    def _get_pca(features, n_components):
+    def apply_pca(features, n_components):
         """Apply PCA to the given features to reduce dimensionality."""
+        features = pd.DataFrame(features)
+        pca = PCA(n_components=n_components)
+        return pca.fit_transform(features)
+
+    @staticmethod
+    def get_scaled_features(features):
+        """Scale the features to a range of 0 to 1."""
+        features = pd.DataFrame(features)
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaled_features = scaler.fit_transform(features)
-        pca = PCA(n_components=n_components)
-        return pca.fit_transform(scaled_features)
+        scaled_df = pd.DataFrame(scaled_features, columns=features.columns)
+        return scaled_df.to_dict(orient="records")
 
-    @classmethod
-    def get_pca_features(cls, features, hist_components):
-        """Extract PCA features from the features of the image."""
-        features = pd.DataFrame(features)
-
-        area = features[["area"]]
-        X_area = cls._get_pca(area, 1)
-
-        stats_id = ["mean_r", "mean_g", "mean_b", "std_dev_r", "std_dev_g", "std_dev_b"]
-        stats = features[stats_id]
-        X_stats = cls._get_pca(stats, 2)
-
-        histograms = features[[f"hist_{i}" for i in range(768)]]
-        X_histogram = cls._get_pca(histograms, hist_components)
-
-        return np.concatenate([X_area, X_stats, X_histogram], axis=1)
+    @staticmethod
+    def get_encoded_labels(data):
+        """Encode the labels as integers."""
+        le = LabelEncoder()
+        labels = pd.DataFrame(data)[["label"]]
+        return le.fit_transform(labels)

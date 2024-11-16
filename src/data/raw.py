@@ -1,6 +1,6 @@
 import os
 import kagglehub
-from . import csv_data
+from . import csv_data, features
 
 
 class MangoDataset:
@@ -12,6 +12,13 @@ class MangoDataset:
         self.path = self._find_dataset()
         self.train_data = self._create_csv("train")
         self.validation_data = self._create_csv("validation")
+
+    def get_labels(self):
+        """Generate the labels for the image features"""
+        return (
+            features.get_encoded_labels(self.train_data),
+            features.get_encoded_labels(self.validation_data),
+        )
 
     def _find_dataset(self):
         """Check for dataset existence and download it if not present."""
