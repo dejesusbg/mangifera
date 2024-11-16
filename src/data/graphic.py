@@ -20,7 +20,7 @@ class MangoPlotter:
 
     @staticmethod
     def load_histogram(img):
-        """Load histogram data from the image."""
+        """Load the histogram data from the image."""
         bins = np.arange(256)
         histogram = [[img[f"hist_{i + j*256}"] for i in range(256)] for j in range(3)]
         return bins, histogram
@@ -79,7 +79,7 @@ class MangoPlotter:
 
     @staticmethod
     def show_pca(x, y):
-        """Display the PCA of the RGB mean and standard deviation."""
+        """Display a scatter plot of the PCA components of the image features."""
         plt.figure(figsize=(10, 6))
         plt.scatter(x, y, alpha=0.5, color="blue")
         plt.title("PCA of Image Features")

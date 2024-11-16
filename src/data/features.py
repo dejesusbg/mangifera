@@ -21,17 +21,13 @@ class MangoFeatureExtractor:
         self.histogram = np.zeros(256, dtype=int)
         self._extract_features()
 
-    def __repr__(self):
-        """Return a string representation of the image."""
-        return str(self.image)
-
     def __iter__(self):
-        """Yield label and features over the detector's results."""
+        """Yield the area and the statistical features of the image."""
         yield ("area", self.area)
         yield from self._get_features()
 
     def _extract_features(self):
-        """Extract features from the mango image."""
+        """Extract relevant features from the mango image."""
         img = graphic.load_image("train", self.image)
         gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         mask = self._get_binary_mask(gray_img)
@@ -41,7 +37,7 @@ class MangoFeatureExtractor:
             self._set_features(img, mask)
 
     def _set_features(self, image, mask):
-        """Calculate the statistics of the image."""
+        """Calculate statistical features and histogram of pixel values."""
         histograms = []
         for idx, channel in enumerate(self.CHANNELS):
             pixel_values = image[:, :, idx][mask > 0]
@@ -55,7 +51,7 @@ class MangoFeatureExtractor:
         self.histogram = np.concatenate(histograms)
 
     def _get_features(self):
-        """Yield statistical features of the image."""
+        """Yield statistical features and histogram values of the image."""
         for stat in self.STATS:
             for channel in self.CHANNELS:
                 yield (f"{stat}_{channel}", getattr(self, stat)[channel])
@@ -65,7 +61,7 @@ class MangoFeatureExtractor:
 
     @staticmethod
     def _get_binary_mask(gray_img):
-        """Generate a binary mask from the grayscale image using Otsu's thresholding."""
+        """Generate a binary mask from the grayscale image using Otsu's thresholding method."""
         blurred_img = ski.filters.gaussian(gray_img, sigma=1.0)
         binary_mask = blurred_img > threshold_otsu(blurred_img)
         filled_mask = binary_fill_holes(binary_mask)
@@ -74,7 +70,7 @@ class MangoFeatureExtractor:
 
     @staticmethod
     def _get_pca(features, n_components):
-        """Get the principal components of the image features."""
+        """Apply PCA to the given features to reduce dimensionality."""
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaled_features = scaler.fit_transform(features)
         pca = PCA(n_components=n_components)
@@ -82,7 +78,7 @@ class MangoFeatureExtractor:
 
     @classmethod
     def get_pca_features(cls, features, hist_components):
-        """Get the principal components of the image features."""
+        """Extract PCA features from the features of the image."""
         features = pd.DataFrame(features)
 
         area = features[["area"]]
