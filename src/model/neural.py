@@ -1,62 +1,73 @@
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from tf_keras.models import Sequential
 from tf_keras.layers import Dense
 
 
 class MangoNetwork:
-    def __init__(self, x, y):
-        from sklearn.preprocessing import LabelEncoder
+    def __init__(self, X, y, epochs=20, batch_size=32, class_weight=None):
+        self.X = X["train"]
+        self.y = y["train"]
+        self.X_val = X["validation"]
+        self.y_val = y["validation"]
 
-        # Suponiendo que tus etiquetas están en la variable `y`
-        # Split the data into training and testing sets
-        X_train, X_test, y_train, y_test = train_test_split(
-            x, y, test_size=0.2, random_state=42
-        )
-        le = LabelEncoder()
-        y_train = le.fit_transform(y_train)
-        y_test = le.transform(y_test)
-
-        # Initialize the neural network model
-        model = Sequential()
-
-        # Suponiendo que tus etiquetas están en la variable `y`
-        le = LabelEncoder()
-        y_train = le.fit_transform(y_train)
-        y_test = le.transform(y_test)
-
-        # Add layers: input layer, one or more hidden layers, and output layer
-        model.add(Dense(64, input_dim=X_train.shape[1], activation="relu"))
-        model.add(Dense(32, activation="relu"))
-        model.add(Dense(1, activation="sigmoid"))
-
-        # Compile the model
-        model.compile(
-            loss="binary_crossentropy",
-            optimizer="adam",
-            metrics=["accuracy", "mse", "mae"],
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            self.X, self.y, test_size=0.0942, random_state=42
         )
 
-        # Train the model
-        model.fit(X_train, y_train, epochs=10, batch_size=32, verbose=1)
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.class_weight = class_weight
+        self.model = self._build_model(self.X_train.shape[1])
+        print("Model initialized successfully.")
+
+    def train(self):
+        self.model.fit(
+            self.X_train,
+            self.y_train,
+            epochs=self.epochs,
+            batch_size=self.batch_size,
+            class_weight=self.class_weight,
+            verbose=1,
+        )
 
         print("Model trained successfully.")
 
-        # Make predictions
-        y_pred = model.predict(X_test)
-        y_pred = (y_pred > 0.5).astype(
-            int
-        )  # Convert probabilities to binary class (0 or 1)
+    def test(self):
+        y_pred_test = self.model.predict(self.X_test)
+        y_pred_test = (y_pred_test > 0.5).astype(int)
+        self._metrics(self.y_test, y_pred_test)
 
-        # Evaluate the model
-        accuracy = accuracy_score(y_test, y_pred)
+    def validate(self):
+        y_pred_val = self.model.predict(self.X_val)
+        y_pred_val = (y_pred_val > 0.5).astype(int)
+        self._metrics(self.y_val, y_pred_val)
+
+    @staticmethod
+    def _build_model(input_dim):
+        model = Sequential(
+            [
+                Dense(128, input_dim=input_dim, activation="relu"),
+                Dense(32, activation="relu"),
+                Dense(1, activation="sigmoid"),
+            ]
+        )
+
+        model.compile(
+            loss="binary_crossentropy",
+            optimizer="adam",
+            metrics=["accuracy"],
+        )
+
+        return model
+
+    @staticmethod
+    def _metrics(y_true, y_pred):
+        accuracy = accuracy_score(y_true, y_pred)
         print(f"Accuracy: {accuracy:.4f}")
 
-        # Classification report
         print("\nClassification Report:")
-        print(classification_report(y_test, y_pred))
+        print(classification_report(y_true, y_pred))
 
-        # Confusion Matrix
         print("Confusion Matrix:")
-        print(confusion_matrix(y_test, y_pred))
+        print(confusion_matrix(y_true, y_pred))
