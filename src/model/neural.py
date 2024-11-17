@@ -12,7 +12,7 @@ class MangoNetwork:
         self.y_val = y["validation"]
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-            self.X, self.y, test_size=0.0942, random_state=42
+            self.X, self.y, test_size=0.2, random_state=42
         )
 
         self.epochs = epochs
@@ -20,6 +20,11 @@ class MangoNetwork:
         self.class_weight = class_weight
         self.model = self._build_model(self.X_train.shape[1])
         print("Model initialized successfully.")
+
+    def run(self):
+        self.train()
+        self.test()
+        self.validate()
 
     def train(self):
         self.model.fit(

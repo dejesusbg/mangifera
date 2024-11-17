@@ -15,10 +15,11 @@ class MangoProcessor:
         self.train_data = self._create_csv("train")
         self.validation_data = self._create_csv("validation")
 
-    def apply_pca(self, n_components=32):
+    def apply_pca(self, n_components=0.95):
         """Compute the principal components for the image features."""
-        self.train_pca = features.apply_pca(self.train_data, n_components)
-        self.validation_pca = features.apply_pca(self.validation_data, n_components)
+        self.train_pca, n_components = features.apply_pca(self.train_data, n_components)
+        self.validation_pca, _ = features.apply_pca(self.validation_data, n_components)
+        print(f"PCA components: {self.train_pca.shape[1]}")
 
     def _process(self, split):
         """Process the image set to extract feature data."""

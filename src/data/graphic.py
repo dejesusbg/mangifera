@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PIL import Image
@@ -78,7 +79,7 @@ class MangoPlotter:
             ax.axis("off")
 
         for ax, (image, features) in zip(axes[:, 1], selected_images):
-            ax.set_title("Histogram")
+            ax.set_title("Histograma")
             bins, histograms = MangoPlotter.load_histogram(features)
             for hist, color in zip(histograms, ["r", "g", "b"]):
                 ax.plot(bins, hist, color=color, alpha=0.7)
@@ -96,10 +97,10 @@ class MangoPlotter:
         channels = ["r", "g", "b"]
         for i, ch in enumerate(channels):
             axes[i].hist(stats[f"mean_{ch}"], bins=20, color=ch, alpha=0.7)
-            axes[i].set_title(f"Mean {ch.upper()} Channel")
+            axes[i].set_title(f"Mean {ch.upper()} channel")
 
             axes[i + 3].hist(stats[f"std_dev_{ch}"], bins=20, color=ch, alpha=0.7)
-            axes[i + 3].set_title(f"Std Dev {ch.upper()} Channel")
+            axes[i + 3].set_title(f"Std Dev {ch.upper()} channel")
 
         plt.tight_layout()
         plt.show()
@@ -111,15 +112,18 @@ class MangoPlotter:
 
         plt.figure(figsize=(8, 6))
         sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
-        plt.title("Correlation Matrix of RGB Mean and Standard Deviation")
+        plt.title("Matriz de Correlación")
         plt.show()
 
     @staticmethod
-    def show_pca(x, y):
-        """Display a scatter plot of the PCA components of the image features."""
-        plt.figure(figsize=(10, 6))
-        plt.scatter(x, y, alpha=0.5, color="blue")
-        plt.title("PCA of Image Features")
-        plt.xlabel("Principal Component 1")
-        plt.ylabel("Principal Component 2")
-        plt.show()
+    def show_pca(features, labels, x=0, y=1):
+        """Display the principal components of the features."""
+        labels = pd.DataFrame(labels)
+        df = pd.DataFrame(data=features.loc[:, [x, y]], index=features.index)
+        df = pd.concat((df, labels), axis=1, join="inner")
+        v1 = f"Component {x}"
+        v2 = f"Component {y}"
+        df.columns = [v1, v2, "Label"]
+        sns.lmplot(x=v1, y=v2, hue="Label", data=df, fit_reg=False)
+        ax = plt.gca()
+        ax.set_title("Separación por Componentes Principales")

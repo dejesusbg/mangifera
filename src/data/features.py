@@ -70,7 +70,8 @@ class MangoFeatureExtractor:
         """Apply PCA to the given features to reduce dimensionality."""
         features = pd.DataFrame(features)
         pca = PCA(n_components=n_components)
-        return pca.fit_transform(features)
+        pca_features = pca.fit_transform(features)
+        return pca_features, pca.n_components_
 
     @staticmethod
     def get_scaled_features(features):
