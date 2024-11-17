@@ -12,10 +12,19 @@ class CSVData(list):
 
         start_time = time.time()
         self.data = self._load()
-        print(f"Loaded dataset {path} in {time.time() - start_time:.2f} seconds.")
         self._save()
 
+        self._log(start_time)
         super().__init__(self.data)
+
+    def _log(self, start_time):
+        """Log the dataset loading time and shape."""
+        name = self.path.split("/")[-1].split(".")[0]
+        load_time = time.time() - start_time
+        num_rows = len(self.data)
+        num_cols = len(self.data[0]) if num_rows > 0 else 0
+
+        print(f"Loaded '{name}' in {load_time:.2f}s | {num_rows} rows, {num_cols} cols")
 
     def _load(self):
         """Load data from the CSV file or generate it if the file does not exist."""
