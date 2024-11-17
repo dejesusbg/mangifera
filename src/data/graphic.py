@@ -26,6 +26,43 @@ class MangoPlotter:
         return bins, histogram
 
     @staticmethod
+    def show_dataset(train_set, validation_set, num_samples=5):
+        """Display a set of sample images."""
+        train_samples = sample(train_set, num_samples)
+        validation_samples = sample(validation_set, num_samples)
+
+        _, axes = plt.subplots(2, num_samples, figsize=(12, 6))
+        axes = axes.flatten()
+
+        for i, image in enumerate(train_samples):
+            axes[i].imshow(MangoPlotter.load_image("train", image))
+            axes[i].set_title(f"Entrenamiento: {image['label']}")
+            axes[i].axis("off")
+
+        for i, image in enumerate(validation_samples):
+            axes[i + num_samples].imshow(MangoPlotter.load_image("validation", image))
+            axes[i + num_samples].set_title(f"Validación: {image['label']}")
+            axes[i + num_samples].axis("off")
+
+        plt.tight_layout()
+        plt.show()
+
+    @staticmethod
+    def show_data_distribution(train_set, validation_set):
+        """Display the distribution of the data in the training and validation sets."""
+        train_labels = [image["label"] for image in train_set]
+        validation_labels = [image["label"] for image in validation_set]
+
+        plt.figure(figsize=(12, 2))
+        sns.countplot(train_labels, label="Entrenamiento")
+        sns.countplot(validation_labels, label="Validación")
+        plt.title("Distribución de Datos")
+        plt.xlabel("Categoría")
+        plt.ylabel("#")
+        plt.legend()
+        plt.show()
+
+    @staticmethod
     def show_samples(images, features, num_samples=5):
         """Display a set of sample images and their corresponding histograms."""
         num_samples = min(num_samples, len(images))
