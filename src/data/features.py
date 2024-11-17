@@ -12,9 +12,9 @@ class MangoFeatureExtractor:
     STATS = ("mean", "std_dev")
     TEXTURE = ("contrast", "correlation", "energy", "homogeneity")
 
-    def __init__(self, split, image):
-        self.split = split
+    def __init__(self, image, split=""):
         self.image = image
+        self.split = split
         self.mean = {}
         self.std_dev = {}
         self.texture = {}
@@ -27,7 +27,11 @@ class MangoFeatureExtractor:
 
     def _extract_features(self):
         """Extract relevant features from the mango image."""
-        img = graphic.load_image(self.split, self.image)
+        if isinstance(self.image, dict):
+            img = graphic.load_dataset_image(self.image, self.split)
+        else:
+            img = graphic.load_image(self.image)
+
         gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         self.area = gray_img.size
         self._set_features(img)
@@ -74,13 +78,18 @@ class MangoFeatureExtractor:
         return pca_features, pca.n_components_
 
     @staticmethod
-    def get_scaled_features(features):
+    def get_scaled_features(features, scaler=None):
         """Scale the features to a range of 0 to 1."""
         features = pd.DataFrame(features)
-        scaler = MinMaxScaler(feature_range=(0, 1))
-        scaled_features = scaler.fit_transform(features)
+
+        if scaler is None:
+            scaler = MinMaxScaler(feature_range=(0, 1))
+            scaled_features = scaler.fit_transform(features)
+        else:
+            scaled_features = scaler.transform(features)
+
         scaled_df = pd.DataFrame(scaled_features, columns=features.columns)
-        return scaled_df.to_dict(orient="records")
+        return scaled_df.to_dict(orient="records"), scaler
 
     @staticmethod
     def get_encoded_labels(data):

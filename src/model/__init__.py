@@ -1,13 +1,15 @@
-from .decision import MangoTree as decision_tree
-from .regression import MangoRegression as multivariate_regression
-from .forest import MangoForest as random_forest
-from .deep import DeepMangoNetwork as deep_neural_network
-from .neural import MangoNetwork as neural_network
+from .classification import MangoClassificationModel as Mango
+from .regression import MangoRegression as mango_reg
+from .tree import MangoTree as mango_tree
+from .forest import MangoForest as mango_forest
+from .neural import MangoNetwork as mango_net
+from .dnn import DeepMangoNetwork as mango_dnn
 
 __all__ = (
-    "decision_tree",
-    "multivariate_regression",
-    "random_forest",
-    "deep_neural_network",
-    "neural_network",
+    "Mango",
+    "mango_reg",
+    "mango_tree",
+    "mango_forest",
+    "mango_net",
+    "mango_dnn",
 )

@@ -12,12 +12,17 @@ class MangoPlotter:
     SIZE = (224, 224)
 
     @staticmethod
-    def load_image(split, image):
+    def load_image(path):
+        """Load and resize the original image."""
+        img_resized = Image.open(path).resize(MangoPlotter.SIZE)
+        return np.array(img_resized)
+
+    @staticmethod
+    def load_dataset_image(image, split):
         """Load and resize the original image from the the specified split."""
         path = csv_data.get_dataset_path()
         path = os.path.join(path, "Dataset", split, image["label"], image["filename"])
-        img_resized = Image.open(path).resize(MangoPlotter.SIZE)
-        return np.array(img_resized)
+        return MangoPlotter.load_image(path)
 
     @staticmethod
     def load_histogram(image):
@@ -36,12 +41,14 @@ class MangoPlotter:
         axes = axes.flatten()
 
         for i, image in enumerate(train_samples):
-            axes[i].imshow(MangoPlotter.load_image("train", image))
+            axes[i].imshow(MangoPlotter.load_dataset_image(image, "train"))
             axes[i].set_title(f"Entrenamiento: {image['label']}")
             axes[i].axis("off")
 
         for i, image in enumerate(validation_samples):
-            axes[i + num_samples].imshow(MangoPlotter.load_image("validation", image))
+            axes[i + num_samples].imshow(
+                MangoPlotter.load_dataset_image(image, "validation")
+            )
             axes[i + num_samples].set_title(f"Validación: {image['label']}")
             axes[i + num_samples].axis("off")
 
@@ -58,8 +65,8 @@ class MangoPlotter:
         sns.countplot(train_labels, label="Entrenamiento")
         sns.countplot(validation_labels, label="Validación")
         plt.title("Distribución de Datos")
-        plt.xlabel("Categoría")
-        plt.ylabel("#")
+        plt.xlabel("#")
+        plt.ylabel("Categoría")
         plt.legend()
         plt.show()
 
@@ -75,7 +82,7 @@ class MangoPlotter:
 
         for ax, (image, features) in zip(axes[:, 0], selected_images):
             ax.set_title(image["label"])
-            ax.imshow(MangoPlotter.load_image("train", image))
+            ax.imshow(MangoPlotter.load_dataset_image(image, "train"))
             ax.axis("off")
 
         for ax, (image, features) in zip(axes[:, 1], selected_images):
