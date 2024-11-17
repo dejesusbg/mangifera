@@ -1,5 +1,6 @@
 import os
 import kagglehub
+from collections import Counter
 from . import csv_data, features
 
 
@@ -14,11 +15,21 @@ class MangoDataset:
         self.validation_data = self._create_csv("validation")
 
     def get_labels(self):
-        """Generate the labels for the image features"""
-        return (
-            features.get_encoded_labels(self.train_data),
-            features.get_encoded_labels(self.validation_data),
-        )
+        """Generate the labels for the images."""
+        return {
+            "train": features.get_encoded_labels(self.train_data),
+            "validation": features.get_encoded_labels(self.validation_data),
+        }
+
+    def get_weights(self):
+        """Generate the class weights based on the label distribution."""
+        label_counts = Counter(data["label"] for data in self.train_data)
+        total_samples = len(self.train_data)
+
+        return {
+            0: total_samples / (2 * label_counts["Ripe"]),
+            1: total_samples / (2 * label_counts["Rotten"]),
+        }
 
     def _find_dataset(self):
         """Check for dataset existence and download it if not present."""
