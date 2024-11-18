@@ -134,3 +134,37 @@ class MangoPlotter:
         sns.lmplot(x=v1, y=v2, hue="Label", data=df, fit_reg=False)
         ax = plt.gca()
         ax.set_title("Separación por Componentes Principales")
+
+    @staticmethod
+    def show_custom_predict(mango, preprocessor, tests, models):
+        """Display the predictions of a set of models on a set of images."""
+        predictions_grid = []
+
+        for image in tests:
+            row_predictions = []
+            for model in models:
+                prediction = mango.custom_predict(model, image, preprocessor)
+
+                if isinstance(prediction, np.ndarray):
+                    prediction = prediction.item()
+
+                row_predictions.append(int(prediction > 0.5))
+            predictions_grid.append(row_predictions)
+
+        predictions_grid = np.array(predictions_grid)
+        cmap = sns.diverging_palette(133, 10, as_cmap=True, s=75, l=75)
+
+        plt.figure(figsize=(12, 4))
+        ax = sns.heatmap(
+            predictions_grid,
+            cbar_kws={"ticks": [0, 1]},
+            annot=True,
+            cmap=cmap,
+            xticklabels=models,
+            yticklabels=tests,
+            linewidths=2,
+        )
+
+        ax.set_title("Predicciones por Modelo e Imagen")
+        plt.tight_layout()
+        plt.show()
