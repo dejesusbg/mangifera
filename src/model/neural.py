@@ -1,10 +1,8 @@
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.neural_network import MLPClassifier
-from . import Mango
+from . import mango
 
 
-class MangoNetwork(Mango):
+class MangoNetwork(mango):
     def __init__(self, X, y, max_iter=20, batch_size=32):
         super().__init__(X, y)
 
@@ -23,7 +21,3 @@ class MangoNetwork(Mango):
     def train(self):
         self.model.fit(self.X_train, self.y_train)
         print("Model trained successfully.")
-
-    def validation(self):
-        y_pred = self.model.predict(self.X_val)
-        return self.get_metrics(y_pred)

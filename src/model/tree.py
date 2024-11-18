@@ -1,16 +1,16 @@
 from sklearn.tree import DecisionTreeClassifier
-from . import Mango
+from . import mango
 
 
-class MangoTree(Mango):
-    def __init__(self, X, y):
+class MangoTree(mango):
+    def __init__(self, X, y, class_weight=None):
         super().__init__(X, y)
 
         self.model = DecisionTreeClassifier(
             criterion="entropy",
             splitter="best",
             max_depth=1000,
-            class_weight="balanced",
+            class_weight=class_weight,
         )
 
         print("Model initialized successfully.")
@@ -18,7 +18,3 @@ class MangoTree(Mango):
     def train(self):
         self.model.fit(self.X_train, self.y_train)
         print("Model trained successfully.")
-
-    def validation(self):
-        y_pred = self.model.predict(self.X_val)
-        return self.get_metrics(y_pred)
