@@ -136,6 +136,62 @@ class MangoPlotter:
         ax.set_title("Separación por Componentes Principales")
 
     @staticmethod
+    def _calculate_tpr_fpr(cm):
+        """Calculate the True Positive Rate and False Positive Rate."""
+        TN, FP, FN, TP = cm.ravel()
+        TPR = TP / (TP + FN) if (TP + FN) > 0 else 0
+        FPR = FP / (FP + TN) if (FP + TN) > 0 else 0
+        return TPR, FPR
+
+    @classmethod
+    def _show_scattered_cm(cls, cms, labels, ax):
+        """Display the Confusion Matrices of the models on a given axis."""
+        for label_cms, label in zip(cms, labels):
+            tpr, fpr = [], []
+            for cm in label_cms:
+                tpr_n, fpr_n = cls._calculate_tpr_fpr(cm)
+                tpr.append(tpr_n)
+                fpr.append(fpr_n)
+            ax.scatter(fpr, tpr, marker="o", label=label)
+
+        ax.plot([0, 1], [0, 1], "k--")
+        ax.set_xlabel("False Positive Rate")
+        ax.set_ylabel("True Positive Rate")
+        ax.legend()
+        ax.grid()
+
+    @classmethod
+    def show_scattered_cm(cls, result, group_by=["model", "runtype"]):
+        """Display the Confusion Matrices of the models by model and runtype."""
+        _, axes = plt.subplots(1, 2, figsize=(12, 6))
+
+        filtered_result = result.copy()
+
+        for i, col in enumerate(group_by):
+            grouped = filtered_result.groupby(col)
+
+            cms = []
+            labels = []
+            for group_name, group_data in grouped:
+                cms.append(group_data["cm"].tolist())
+                labels.append(group_name)
+
+            cls._show_scattered_cm(cms, labels, axes[i])
+            axes[i].set_title(f"Matriz de confusión por {col}")
+
+        plt.tight_layout()
+        plt.show()
+
+    @staticmethod
+    def show_results_heatmap(result, label):
+        heatmap_data = result.pivot(index="runtype", columns="model", values=label)
+
+        plt.figure(figsize=(12, 2))
+        sns.heatmap(heatmap_data, annot=True, fmt=".3f", cmap="coolwarm_r", cbar=True)
+        plt.title(f"Mapa de calor de {label}")
+        plt.show()
+
+    @staticmethod
     def show_custom_predict(mango, preprocessor, tests, models):
         """Display the predictions of a set of models on a set of images."""
         predictions_grid = []
