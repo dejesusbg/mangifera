@@ -3,21 +3,12 @@ from . import mango
 
 
 class MangoNetwork(mango):
-    def __init__(self, X, y, max_iter=20, batch_size=32):
+    def __init__(self, X, y, param_grid=None):
         super().__init__(X, y)
 
-        self.model = MLPClassifier(
-            hidden_layer_sizes=(128, 32),
-            activation="relu",
-            solver="adam",
-            max_iter=max_iter,
-            batch_size=batch_size,
-            random_state=42,
-            verbose=False,
-        )
-
+        self.model = MLPClassifier(activation="relu", solver="adam", random_state=42)
+        self.param_grid = param_grid
         print("Model initialized successfully.")
 
     def train(self):
-        self.model.fit(self.X_train, self.y_train)
-        print("Model trained successfully.")
+        self.grid_search()
