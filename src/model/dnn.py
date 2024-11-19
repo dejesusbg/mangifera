@@ -47,6 +47,7 @@ class MangoDeepNetwork(mango):
             batch_size=self.batch_size,
             class_weight=self.class_weight,
             validation_data=(self.X_val, self.y_val),
+            verbose=False,
         )
 
         print("Model trained successfully.")

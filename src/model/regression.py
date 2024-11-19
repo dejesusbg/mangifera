@@ -6,7 +6,7 @@ class MangoRegression(mango):
     def __init__(self, X, y, param_grid=None):
         super().__init__(X, y)
 
-        self.model = Ridge()
+        self.model = Ridge(random_state=42)
         self.param_grid = param_grid
         print("Model initialized successfully.")
 
