@@ -1,3 +1,7 @@
+import tensorflow as tf
+
+tf.get_logger().setLevel("ERROR")
+
 import matplotlib.pyplot as plt
 from tf_keras.models import Sequential
 from tf_keras.layers import Dense, Dropout, BatchNormalization

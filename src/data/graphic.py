@@ -135,50 +135,48 @@ class MangoPlotter:
         ax = plt.gca()
         ax.set_title("Separación por Componentes Principales")
 
-    @staticmethod
-    def _calculate_tpr_fpr(cm):
-        """Calculate the True Positive Rate and False Positive Rate."""
-        TN, FP, FN, TP = cm.ravel()
-        TPR = TP / (TP + FN) if (TP + FN) > 0 else 0
-        FPR = FP / (FP + TN) if (FP + TN) > 0 else 0
-        return TPR, FPR
+    @classmethod
+    def _plot_scattered_cm(cls, cm_values, labels, axis):
+        """Plot confusion matrix values as scatter points on a given axis."""
+        for cm, label in zip(cm_values, labels):
+            false_rate = cm[1] / sum(cm)
+            true_rate = cm[0] / sum(cm)
+            axis.scatter(false_rate, true_rate, label=label)
+
+        axis.set_xlabel("False Rate")
+        axis.set_ylabel("True Rate")
+        axis.set_xlim(-0.01, 0.26)
+        axis.set_ylim(0.74, 1.01)
+        axis.legend()
+        axis.grid(True)
 
     @classmethod
-    def _show_scattered_cm(cls, cms, labels, ax):
-        """Display the Confusion Matrices of the models on a given axis."""
-        for label_cms, label in zip(cms, labels):
-            tpr, fpr = [], []
-            for cm in label_cms:
-                tpr_n, fpr_n = cls._calculate_tpr_fpr(cm)
-                tpr.append(tpr_n)
-                fpr.append(fpr_n)
-            ax.scatter(fpr, tpr, marker="o", label=label)
+    def show_scattered_cm(cls, results_df, label):
+        """Display confusion matrices grouped by model type and class."""
+        filtered_results = results_df[results_df["runtype"] == label]
+        grouped_by_model = filtered_results.groupby("model")
 
-        ax.plot([0, 1], [0, 1], "k--")
-        ax.set_xlabel("False Positive Rate")
-        ax.set_ylabel("True Positive Rate")
-        ax.legend()
-        ax.grid()
+        cm_class_0_values = []
+        cm_class_1_values = []
+        model_labels = []
 
-    @classmethod
-    def show_scattered_cm(cls, result, group_by=["model", "runtype"]):
-        """Display the Confusion Matrices of the models by model and runtype."""
-        _, axes = plt.subplots(1, 2, figsize=(12, 6))
+        _, axes = plt.subplots(1, 2, figsize=(10, 5))
 
-        filtered_result = result.copy()
+        for model_name, group_data in grouped_by_model:
+            cm_class_0 = group_data["cm"].apply(lambda cm: cm[0]).iloc[0]
+            cm_class_1 = group_data["cm"].apply(lambda cm: cm[1]).iloc[0][::-1]
 
-        for i, col in enumerate(group_by):
-            grouped = filtered_result.groupby(col)
+            cm_class_0_values.append(cm_class_0)
+            cm_class_1_values.append(cm_class_1)
+            model_labels.append(model_name)
 
-            cms = []
-            labels = []
-            for group_name, group_data in grouped:
-                cms.append(group_data["cm"].tolist())
-                labels.append(group_name)
+        cls._plot_scattered_cm(cm_class_0_values, model_labels, axes[0])
+        axes[0].set_title("Class 0: Ripe (Positive)")
 
-            cls._show_scattered_cm(cms, labels, axes[i])
-            axes[i].set_title(f"Matriz de confusión por {col}")
+        cls._plot_scattered_cm(cm_class_1_values, model_labels, axes[1])
+        axes[1].set_title("Class 1: Rotten (Negative)")
 
+        plt.suptitle(label)
         plt.tight_layout()
         plt.show()
 
